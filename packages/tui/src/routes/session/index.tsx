@@ -55,6 +55,8 @@ import { DialogSessionRename } from "../../component/dialog-session-rename"
 import { Sidebar } from "./sidebar"
 import { SubagentFooter } from "./subagent-footer.tsx"
 import { filetype } from "../../util/filetype"
+import { diagramPalette, diagramRenderNode } from "../../component/diagram"
+import { DialogDiagram } from "../../component/diagram-dialog"
 import parsers from "../../parsers-config"
 import { errorMessage } from "../../util/error"
 import { Toast, useToast } from "../../ui/toast"
@@ -1686,6 +1688,17 @@ function ReasoningHeader(props: {
 function TextPart(props: { last: boolean; part: TextPart; message: AssistantMessage }) {
   const ctx = use()
   const { theme, syntax } = useTheme()
+  const renderer = useRenderer()
+  const dimensions = useTerminalDimensions()
+  const dialog = useDialog()
+  const renderNode = createMemo(() =>
+    diagramRenderNode(
+      renderer,
+      diagramPalette(theme),
+      () => Math.max(20, dimensions().width - 8),
+      (diagram) => dialog.replace(() => <DialogDiagram diagram={diagram} />),
+    ),
+  )
   return (
     <Show when={props.part.text.trim()}>
       <box ref={(el: BoxRenderable) => alwaysSeparate.add(el)} paddingLeft={3} marginTop={1} flexShrink={0}>
@@ -1695,6 +1708,7 @@ function TextPart(props: { last: boolean; part: TextPart; message: AssistantMess
           internalBlockMode="top-level"
           content={props.part.text.trim()}
           tableOptions={{ style: "grid" }}
+          renderNode={renderNode()}
           conceal={ctx.conceal()}
           fg={theme.markdownText}
           bg={theme.background}
